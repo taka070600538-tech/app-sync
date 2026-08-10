@@ -123,6 +123,38 @@ export function renderSyncSettings(container) {
     <p class="settings-note">1日1回、アプリを開いたときに自動保存されます。
       状態: ${hasToken ? 'トークン設定済み' : 'トークン未設定'} /
       最終保存: ${last ? new Date(last).toLocaleString('ja-JP') : 'なし'}</p>
+    <details class="app-sync-howto" open>
+      <summary>PCで作業するときの手順</summary>
+      <p>ふだんはスマホの自動保存だけで十分です。PCで食品登録などの作業をするときだけ、
+        次の順番で操作してください。この順番を守れば、どちらの記録も失われません。</p>
+      <ol>
+        <li>スマホで「今すぐ保存」</li>
+        <li>PCで「GitHubから復元」</li>
+        <li>PCで作業 →「今すぐ保存」</li>
+        <li>スマホで「GitHubから復元」</li>
+      </ol>
+      <p class="app-sync-howto-warn">順番を飛ばして両方の端末で記録を進めてしまうと、
+        後から保存した方の内容で他方が上書きされます。</p>
+    </details>
+    <style>
+      .app-sync-howto {
+        margin: 8px 0 16px 0;
+        padding: 8px 12px;
+        border: 1px solid var(--color-border, #e2e0da);
+        border-radius: var(--radius-sm, 8px);
+        background: var(--color-surface, #fff);
+        font-size: 0.85rem;
+      }
+      .app-sync-howto summary {
+        cursor: pointer;
+        font-weight: bold;
+        color: var(--color-primary-dark, #1f4d36);
+      }
+      .app-sync-howto p { margin: 8px 0; color: var(--color-text-muted, #6b6b6b); }
+      .app-sync-howto ol { margin: 8px 0; padding-left: 1.4em; }
+      .app-sync-howto li { margin-bottom: 4px; }
+      .app-sync-howto-warn { color: var(--color-danger, #b3452c) !important; }
+    </style>
     <label>Personal Access Token
       <input type="password" id="sync-token" placeholder="${hasToken ? '(設定済み。変更時のみ入力)' : 'github_pat_...'}"></label>
     <button type="button" id="sync-save-token">トークンを保存</button>
