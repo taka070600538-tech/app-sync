@@ -21,11 +21,15 @@
       }))
       .catch(() => {}); // オフライン時はスキップ(アプリ本体は動く)
 
-2. 設定画面に:
+2. 設定画面に、1つのコンテナへまとめて表示する場合:
 
     import('https://taka070600538-tech.github.io/app-sync/v1/sync.js')
       .then((sync) => sync.renderSyncSettings(コンテナ要素))
       .catch(() => { /* オフライン用の案内を表示 */ });
+
+   トークン入力とバックアップ操作を別々の場所に配置したい場合は、
+   `renderTokenSettings(コンテナ)` と `renderBackupControls(コンテナ)` を
+   個別に呼び出す(それぞれ別のDOM要素に描画する)。
 
 3. `sw.js` ではこのURLをキャッシュしないこと(オフライン時はどのみち
    保存できず、キャッシュすると更新が届かなくなるため)。

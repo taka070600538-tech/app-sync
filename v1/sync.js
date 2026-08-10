@@ -115,13 +115,32 @@ export async function restoreFromGitHub() {
   }
 }
 
-export function renderSyncSettings(container) {
+// GitHub Personal Access Tokenの入力・保存だけを担当する。
+export function renderTokenSettings(container) {
   const hasToken = !!getToken();
+  container.innerHTML = `
+    <h3 class="settings-heading">GitHub連携</h3>
+    <p class="settings-note">状態: ${hasToken ? 'トークン設定済み' : 'トークン未設定'}</p>
+    <label>Personal Access Token
+      <input type="password" id="sync-token" placeholder="${hasToken ? '(設定済み。変更時のみ入力)' : 'github_pat_...'}"></label>
+    <button type="button" id="sync-save-token">トークンを保存</button>
+    <span id="sync-token-status"></span>
+  `;
+  const status = container.querySelector('#sync-token-status');
+  container.querySelector('#sync-save-token').addEventListener('click', () => {
+    const value = container.querySelector('#sync-token').value.trim();
+    if (!value) { status.textContent = 'トークンを入力してください'; return; }
+    localStorage.setItem(KEY_TOKEN, value);
+    renderTokenSettings(container); // 状態表示を更新
+  });
+}
+
+// 保存・復元の操作と、その手順の案内だけを担当する(トークン入力は含まない)。
+export function renderBackupControls(container) {
   const last = config ? getLastBackup(config.appId) : null;
   container.innerHTML = `
     <h3 class="settings-heading">バックアップ(GitHub)</h3>
     <p class="settings-note">1日1回、アプリを開いたときに自動保存されます。
-      状態: ${hasToken ? 'トークン設定済み' : 'トークン未設定'} /
       最終保存: ${last ? new Date(last).toLocaleString('ja-JP') : 'なし'}</p>
     <details class="app-sync-howto" open>
       <summary>PCで作業するときの手順</summary>
@@ -155,24 +174,15 @@ export function renderSyncSettings(container) {
       .app-sync-howto li { margin-bottom: 4px; }
       .app-sync-howto-warn { color: var(--color-danger, #b3452c) !important; }
     </style>
-    <label>Personal Access Token
-      <input type="password" id="sync-token" placeholder="${hasToken ? '(設定済み。変更時のみ入力)' : 'github_pat_...'}"></label>
-    <button type="button" id="sync-save-token">トークンを保存</button>
     <button type="button" id="sync-backup-now">今すぐ保存</button>
     <button type="button" id="sync-restore">GitHubから復元</button>
     <span id="sync-status"></span>
   `;
   const status = container.querySelector('#sync-status');
-  container.querySelector('#sync-save-token').addEventListener('click', () => {
-    const value = container.querySelector('#sync-token').value.trim();
-    if (!value) { status.textContent = 'トークンを入力してください'; return; }
-    localStorage.setItem(KEY_TOKEN, value);
-    renderSyncSettings(container); // 状態表示を更新
-  });
   container.querySelector('#sync-backup-now').addEventListener('click', async () => {
     status.textContent = '保存中...';
     const result = await backupNow();
-    if (result.ok) { renderSyncSettings(container); return; }
+    if (result.ok) { renderBackupControls(container); return; }
     status.textContent = result.message;
   });
   container.querySelector('#sync-restore').addEventListener('click', async () => {
@@ -182,4 +192,14 @@ export function renderSyncSettings(container) {
     status.textContent = result.message;
     if (result.ok) setTimeout(() => location.reload(), 800);
   });
+}
+
+// 後方互換: トークン設定とバックアップ操作を1つのコンテナにまとめて表示する。
+// レイアウトを分けたいアプリはrenderTokenSettings/renderBackupControlsを個別に呼ぶ。
+export function renderSyncSettings(container) {
+  const tokenSection = document.createElement('div');
+  const backupSection = document.createElement('div');
+  container.append(tokenSection, backupSection);
+  renderTokenSettings(tokenSection);
+  renderBackupControls(backupSection);
 }
