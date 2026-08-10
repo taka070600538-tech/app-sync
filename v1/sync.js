@@ -115,7 +115,9 @@ export async function restoreFromGitHub() {
   }
 }
 
-// GitHub Personal Access Tokenの入力・保存だけを担当する。
+// GitHub Personal Access Tokenの入力・保存を担当する。
+// 保存直後にその場で動作確認できるよう「今すぐ保存」も併設する
+// (バックアップ操作本体はrenderBackupControlsが別に持つ)。
 export function renderTokenSettings(container) {
   const hasToken = !!getToken();
   container.innerHTML = `
@@ -124,6 +126,7 @@ export function renderTokenSettings(container) {
     <label>Personal Access Token
       <input type="password" id="sync-token" placeholder="${hasToken ? '(設定済み。変更時のみ入力)' : 'github_pat_...'}"></label>
     <button type="button" id="sync-save-token">トークンを保存</button>
+    <button type="button" id="sync-token-backup-now">今すぐ保存</button>
     <span id="sync-token-status"></span>
   `;
   const status = container.querySelector('#sync-token-status');
@@ -132,6 +135,10 @@ export function renderTokenSettings(container) {
     if (!value) { status.textContent = 'トークンを入力してください'; return; }
     localStorage.setItem(KEY_TOKEN, value);
     renderTokenSettings(container); // 状態表示を更新
+  });
+  container.querySelector('#sync-token-backup-now').addEventListener('click', async () => {
+    status.textContent = '保存中...';
+    status.textContent = (await backupNow()).message;
   });
 }
 
