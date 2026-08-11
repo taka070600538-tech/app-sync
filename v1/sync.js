@@ -123,6 +123,7 @@ export function renderTokenSettings(container) {
   container.innerHTML = `
     <h3 class="settings-heading">GitHub連携</h3>
     <p class="settings-note">状態: ${hasToken ? 'トークン設定済み' : 'トークン未設定'}</p>
+    <p class="settings-note">機種変更のときは、新しい端末でトークンを設定して「GitHubから復元」してください。</p>
     <label>Personal Access Token
       <input type="password" id="sync-token" placeholder="${hasToken ? '(設定済み。変更時のみ入力)' : 'github_pat_...'}"></label>
     <button type="button" id="sync-save-token">トークンを保存</button>
@@ -146,12 +147,12 @@ export function renderTokenSettings(container) {
 export function renderBackupControls(container) {
   const last = config ? getLastBackup(config.appId) : null;
   container.innerHTML = `
-    <h3 class="settings-heading">バックアップ(GitHub)</h3>
-    <p class="settings-note">1日1回、アプリを開いたときに自動保存されます。
-      最終保存: ${last ? new Date(last).toLocaleString('ja-JP') : 'なし'}</p>
+    <h3 class="settings-heading">GitHubへのバックアップ</h3>
+    <p class="settings-note">記録はこの端末(ブラウザ)に保存され、1日1回、アプリを開いたときに
+      GitHubへ自動バックアップされます。最終保存: ${last ? new Date(last).toLocaleString('ja-JP') : 'なし'}</p>
     <details class="app-sync-howto" open>
       <summary>PCで作業するときの手順</summary>
-      <p>ふだんはスマホの自動保存だけで十分です。PCで食品登録などの作業をするときだけ、
+      <p>ふだんはスマホの自動保存だけで十分です。PCで作業をするときだけ、
         次の順番で操作してください。この順番を守れば、どちらの記録も失われません。</p>
       <ol>
         <li>スマホで「今すぐ保存」</li>
@@ -201,12 +202,13 @@ export function renderBackupControls(container) {
   });
 }
 
-// 後方互換: トークン設定とバックアップ操作を1つのコンテナにまとめて表示する。
-// レイアウトを分けたいアプリはrenderTokenSettings/renderBackupControlsを個別に呼ぶ。
+// 後方互換: バックアップ操作とトークン設定を1つのコンテナにまとめて表示する。
+// 標準の並び順(①GitHubへのバックアップ→②GitHub連携)に合わせ、バックアップを先に描画する。
+// レイアウトを分けたいアプリはrenderBackupControls/renderTokenSettingsを個別に呼ぶ。
 export function renderSyncSettings(container) {
-  const tokenSection = document.createElement('div');
   const backupSection = document.createElement('div');
-  container.append(tokenSection, backupSection);
-  renderTokenSettings(tokenSection);
+  const tokenSection = document.createElement('div');
+  container.append(backupSection, tokenSection);
   renderBackupControls(backupSection);
+  renderTokenSettings(tokenSection);
 }
