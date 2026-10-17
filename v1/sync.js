@@ -69,17 +69,32 @@ async function fetchRemote(token, path) {
   return res.json();
 }
 
-async function putContents(token, path, content) {
+async function putContents(token, path, content, message = `backup: ${path} ${todayString()}`) {
   const existing = await fetchRemote(token, path);
   return fetch(API_BASE + path, {
     method: 'PUT',
     headers: authHeaders(token),
     body: JSON.stringify({
-      message: `backup: ${path} ${todayString()}`,
+      message,
       content,
       ...(existing ? { sha: existing.sha } : {}),
     }),
   });
+}
+
+// 任意パスへテキストをPUTする(印刷依頼JSONなど)。バックアップの最終保存日時は更新しない。
+export async function putFile(path, text, { message = 'put: ' + path } = {}) {
+  const token = getToken();
+  if (!token) return { ok: false, message: 'トークンが未設定です' };
+  try {
+    const content = utf8ToBase64(text);
+    let res = await putContents(token, path, content, message);
+    if (res.status === 409 || res.status === 422) res = await putContents(token, path, content, message);
+    if (!res.ok) return { ok: false, message: `保存に失敗しました(${res.status})` };
+    return { ok: true, message: '保存しました' };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
 }
 
 export async function backupNow() {

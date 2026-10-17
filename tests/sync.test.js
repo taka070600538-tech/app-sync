@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { utf8ToBase64, base64ToUtf8, todayString, shouldBackupToday } from '../v1/sync.js';
+import { utf8ToBase64, base64ToUtf8, todayString, shouldBackupToday, putFile } from '../v1/sync.js';
 
 test('utf8ToBase64/base64ToUtf8: 日本語を含む文字列が往復で一致する', () => {
   const original = '{"食品":"ごはん","kcal":168}';
@@ -33,4 +33,15 @@ test('shouldBackupToday: 最終保存が今日ならスキップする', () => {
 test('shouldBackupToday: 最終保存が昨日なら保存する', () => {
   const yesterday = new Date(2026, 7, 9, 23, 0).toISOString();
   assert.equal(shouldBackupToday(yesterday, '2026-08-10'), true);
+});
+
+test('putFile: トークン未設定なら ok:false を返す(ネットワークに触れない)', async () => {
+  const original = globalThis.localStorage;
+  globalThis.localStorage = { getItem: () => null };
+  try {
+    assert.deepEqual(await putFile('x/y.json', '{}'), { ok: false, message: 'トークンが未設定です' });
+  } finally {
+    if (original === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = original;
+  }
 });
